@@ -1,0 +1,261 @@
+---
+title: "Momento de Retroalimentación Módulo 1"
+subtitle: "Técnicas de procesamiento de datos para el análisis estadístico y para la construcción de modelos"
+author: "Ariadna Jocelyn Guzmán Jiménez - A01749373"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+
+
+## Lectura de datos
+
+```{r}
+db = read.csv("ds_salaries.csv")
+salary = db$salary_in_usd
+modality = db$remote_ratio
+experience = db$experience_level
+country = db$company_location
+jobType = db$job_title
+```
+
+
+## Medidas estadísticas
+### Variables cuantitativas: Medidas de tendencia central y dispersión 
+
+* Salario 
+* Remote ratio (modalidad de trabajo)
+
+```{r}
+
+library(modeest)
+
+# Medidas de tendencia central 
+
+n = length(db$X) #N
+sprintf("=========== Medidas de tendencia central ===========")
+sprintf("Numero de datos: %s", n)
+meanSalary = mean(salary) #Promedio de salario
+sprintf("Promedio de salarios: %s", meanSalary)
+medianSalary = median(salary) #Mediana de salario
+sprintf("Mediana de salarios; %s", medianSalary)
+modeSalary = mlv(salary, method = "mfv")[1] #Moda de salario
+sprintf("Moda de salarios: %s", modeSalary)
+
+meanModality = mean(modality) #Promedio de modalidad
+sprintf("Promedio de modalidad de trabajo (proporción); %s", meanModality)
+medianModality = median(modality) #Mediana de modalidad
+sprintf("Mediana de modalidad; %s", medianModality)
+modeModality = mlv(modality, method = "mfv")[1] #Moda de modalidad
+sprintf("Moda de modalidad: %s", modeModality)
+
+# Medidas de dispersion
+sprintf("=========== Medidas de dispersión ===========")
+maxSalary = max(salary) # Maximo valor de salario
+sprintf("Salario máximo: %s", maxSalary)
+minSalary = min(salary) # Minimo valor de salario
+sprintf("Salario mínimo: %s", minSalary)
+deSalary = sd(salary) # Desviacion estandar salario
+sprintf("Desviacion estandar del salario %s", deSalary)
+sSalary = var(salary) # Varianza de salario
+sprintf("Varianza de salario: %s", sSalary)
+
+maxModality = max(modality) # Maximo valor de modalidad
+sprintf("Porcentaje de modalidad máximo: %s", maxModality)
+minModality = min(modality) # Minimo valor de modalidad
+sprintf("Porcentaje de modalidad mínimo: %s", minModality)
+deModality = sd(modality) # Desviacion estandar modalidad
+sprintf("Desviacion estandar del porcentaje de modalidad: %s", deModality)
+sModality = var(modality) # Varianza de modalidad
+sprintf("Varianza de modalidad: %s", sModality)
+```
+
+### Variables cualitativas: tablas de distribución de frecuencia
+
+* Experience level
+* Company location
+* Job title
+
+```{r}
+experienceTable = table(experience)
+cat("Tabla de frecuencia de niveles de experiencia en Data Science\n\n")
+experienceTable
+```
+
+
+```{r}
+countryTable = table(country)
+cat("Tabla de frecuencia de países de origen de compañías de Data Science\n\n")
+countryTable
+```
+
+
+```{r}
+jobTypeTable = table(jobType)
+cat("Tabla de frecuencia de tipos de trabajo en Data Science\n\n")
+jobTypeTable
+
+```
+### Moda
+
+```{r}
+modeExp = mlv(experience, method = "mfv")[1] 
+sprintf("Moda de experiencia: %s", modeExp)
+modeCountry = mlv(country, method = "mfv")[1] 
+sprintf("Moda de país: %s", modeCountry)
+modeJob = mlv(jobType, method = "mfv")[1] 
+sprintf("Moda de tipo de trabajo: %s", modeJob)
+```
+
+
+## Herramientas de visualización
+###  Variables cuantitativas: Medidas de posición y análisis de distribución
+
+#### Distribución de datos de variables categóricas
+
+##### Eliminación de datos atípicos en salarios 
+
+```{r}
+#Cuartiles
+q1_s = quantile(salary, 0.25)
+q3_s = quantile(salary, 0.75)
+Rs = q3_s - q1_s 
+y2= q3_s + 1.5 * Rs
+
+par(mfrow=c(2,1))  #Matriz de gráficos 
+boxplot(salary,horizontal=TRUE,ylim=c(0,y2) , main= "Salarios")
+abline(v=y2,col="red")  #linea vertical en el límite de los datos atípicos
+X= db[salary<y2,c("salary_in_usd")] #Quitar datos atípicos de la matriz db en la variable X
+summary(X)
+```
+
+
+
+##### Exploración de la normalidad de la variable salarios 
+
+```{r}
+qqnorm(salary,  main= " QQplot salarios")
+qqline(salary)
+```
+
+
+```{r}
+hist(salary,prob=TRUE,col=0,  main= "Histograma de salario")
+x=seq(min(salary),max(salary),0.1)
+y=dnorm(x,mean(salary),sd(salary))
+lines(x,y,col="red")
+```
+
+
+
+##### Eliminación de datos atípicos en modalidad 
+
+```{r}
+#Cuartiles
+q1_m = quantile(modality, 0.25)
+q3_m = quantile(modality, 0.75)
+Rm = q3_m - q1_m 
+y2= q3_m + 1.5 * Rm
+
+par(mfrow=c(2,1))  #Matriz de gráficos 
+boxplot(modality,horizontal=TRUE,ylim=c(0,y2) , main= "Modalidad de trabajo")
+abline(v=y2,col="red")  #linea vertical en el límite de los datos atípicos
+X= db[modality<y2,c("remote_ratio")] #Quitar datos atípicos de la matriz db en la variable X
+summary(X)
+```
+
+
+
+##### Exploración de la normalidad de la variable modalidad 
+
+```{r}
+qqnorm(modality,  main= " QQplot modalidad")
+qqline(modality)
+```
+
+
+```{r}
+hist(modality,prob=TRUE,col=0,  main= "Histograma de modalidad")
+x=seq(min(modality),max(modality),0.1)
+y=dnorm(x,mean(modality),sd(modality))
+lines(x,y,col="red")
+```
+
+##### Curtosis y sesgo de salarios
+
+```{r}
+library(moments)
+skewness(salary)
+kurtosis(salary)
+```
+
+
+##### Curtosis y sesgo de modalidad
+
+```{r}
+skewness(modality)
+kurtosis(modality)
+```
+
+
+###  Variables categóricas: Distribución de los datos
+
+
+```{r}
+sorted_tableEx = sort(experienceTable)
+barplot(sorted_tableEx, col= c("#E0BBE4", "#957DAD" , "#D291BC" , "#FEC8D8" ), main = "Niveles de experiencia en Data Science", xlab="Nivel", ylab = "Frecuencia" )
+```
+
+
+```{r}
+sorted_tableC = sort(countryTable, decreasing = TRUE)
+barplot(sorted_tableC, col= c("#E0BBE4", "#957DAD" , "#D291BC" , "#FEC8D8" ), main = "Paises de origen de companias", xlab="Frecuencia", width = 1, cex.names = 0.5, horiz = T, las = 2 )
+```
+
+
+```{r}
+sorted_tableJT = sort(jobTypeTable)
+par(mar=c(5.1,10,4.1,2.1)+.1)
+barplot(sorted_tableJT, col= c("#E0BBE4", "#957DAD" , "#D291BC" , "#FEC8D8" ), main = "Tipos de trabajo en Data Science", xlab="Frecuencia", width = 1, cex.names = 0.5, horiz = T, las = 2 )
+```
+
+
+# Preguntas
+
+##### ¿Cuánto puede esperar de salario un Data Analyst?
+
+```{r}
+data_analyst_salary = db[db$job_title == "Data Analyst", ]
+mean_salary_da = mean
+sprintf("Promedio esperado de salario de un Data Analyst")
+mean_salary_da
+```
+
+#### ¿Cuál es el top 5 de países con mejores salarios?
+
+```{r}
+sorted_db = db[order(db$salary_in_usd, decreasing = TRUE), ]
+top_sorted_db = head(sorted_db, 100)
+top_countries = top_sorted_db$company_location
+top = head(unique(top_countries), 5)
+df = data.frame(top_sorted_db$company_location, top_sorted_db$salary_in_usd)
+print("Top 5 Países con Mejores Salarios: ")
+top
+```
+
+#### ¿Cuál es la modalidad mejor pagada? 
+
+```{r}
+top_modality = top_sorted_db$remote_ratio
+top = head(unique(top_modality), 3)
+barplot(table(top_modality), col= c("#E0BBE4", "#957DAD" , "#D291BC" , "#FEC8D8" ), xlab = "Modalidad en porcentaje", ylab = "Frecuencia", main= "Modalidad mejor pagada")
+sprintf("Modalidad de trabajo mejor pagada en porcentaje: %s", top[1])
+cat("*0 = no hay trabajo remoto\n*50 = parcialmente remota\n*100 = totalmente remota")
+```
+
+
+
+
